@@ -41,7 +41,7 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 
 our @EXPORT = ();
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 our @NAME_PREFIXES = qw(de di du da le la van von der den des ten ter);
 
@@ -1277,27 +1277,31 @@ Returns the name in the "last, given" format.
 
 Given a normalized name of the form "last, given", returns "given last".
 
-=head2 normalizeNameWithspace(string name): string
+=head2 normalizeNameWhitespace(string name): string
 
-Normalizes the withspace within a name. This is mainly for internal usage.
+Normalizes the whitespace within a name. This is mainly for internal usage.
 
 =head1 EXPORT
 
 None by default.
 
+=head1 KNOWN ISSUES
+
+This module currently overwrites @Text::Capitalize::exceptions globally, which can have unintended side-effects.
+
 =head1 SEE ALSO
 
-The xPapers application framework from which this has been extracted, www.xpapers.org
+The xPapers application framework from which this has been extracted, http://www.xpapers.org
 
 The related L<Biblio::Citation::Compare> module.
 
 =head1 AUTHOR
 
-David Bourget, http://www.dbourget.com
+David Bourget, http://www.dbourget.com, with contributions by Zbigniew Lukasiak
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2011 by David Bourget
+Copyright (C) 2011 by David Bourget and University of London
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.10.1 or,

@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               Text-Names
-version:            0.03
+version:            0.04
 abstract:           Perl extension for name parsing and normalization
 author:
     - David Bourget
@@ -11,6 +11,7 @@ configure_requires:
 build_requires:
     ExtUtils::MakeMaker:  0
 requires:
+    Test::More:        0.96
     Text::Capitalize:  1.1
 no_index:
     directory:
