@@ -41,7 +41,7 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 
 our @EXPORT = ();
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 our @NAME_PREFIXES = qw(de di du da le la van von der den des ten ter);
 
@@ -1223,9 +1223,11 @@ Lastname(s) [Jr], Given name(s)
 
 Some examples:
 
-Bourget, David Joseph Richard
-Bourget Jr, David
-Bourget, D. J. R.
+1) Bourget, David Joseph Richard
+
+2) Bourget Jr, David
+
+3) Bourget, D. J. R.
 
 These are all normalized names. This format is what is referred to as the normalized representation of a name here. 
 
@@ -1233,7 +1235,7 @@ These are all normalized names. This format is what is referred to as the normal
 
 =head2 parseNames(string names): array
 
-Takes a string of names as parameters and returns an array of normalized representations of the names in the string. This routines understands a wide variety of formattings for names and lists of names typically found as list of authors in bibliographic citations. See the test 03-parseNames.t for multiple examples.
+Takes a string of names as parameter and returns an array of normalized representations of the names in the string. This routine understands a wide variety of formattings for names and lists of names typically found as list of authors in bibliographic citations. See the test 03-parseNames.t for multiple examples.
 
 =head2 parseNameList(array names): array
 
@@ -1241,7 +1243,7 @@ Takes an array of names (as strings) and returns an array of normalized represen
 
 =head2 parseName(string name): array
 
-Takes a name in one of the multiple formats that one can write a name in, and returns it as an array representing the post-comma and pre-comma parts of its normalized form (yes, in that order). For example, parseName("David Bourget") returns ('David','Bourget').
+Takes a name in one of the multiple formats that one can write a name in, and returns it as an array representing the post-comma and pre-comma parts of its normalized form (in that order). For example, parseName("David Bourget") returns ('David','Bourget').
 
 =head2 cleanName(string name): string
 
@@ -1257,11 +1259,11 @@ Returns true iff name1 is a common abbreviation of name2 in English. For example
 
 =head2 setAbbreviations(array): undef
 
-Sets the abbreviation mapping used to determine whether, say, 'David' and 'Dave' are compatible name parts. The mapping is also use by abbreviationOf(). The format of the array should be: 'Dave', 'David', 'Davy', 'David', etc, otherwise representable in Perl as 'Dave' => 'David', 'Davy' => 'David', etc.
+Sets the abbreviation mapping used to determine whether, say, 'David' and 'Dave' are compatible name parts. The mapping is also used by abbreviationOf(). The format of the array should be: 'Dave', 'David', 'Davy', 'David', etc, otherwise representable in Perl as 'Dave' => 'David', 'Davy' => 'David', etc.
 
 =head2 weakenings(string name): array
 
-Returns an array of normalizations names which are weakenings of the name passed as argument. Substituting a given names by an initial, or removing an initial, for example, are operations which generate weakenings of a name. Such operations are applied with arbitrary depth, until the name has been reduced to a single initial followed by the lastname, and all intermediary steps returned. 
+Returns an array of normalized names which are weakenings of the name passed as argument. Substituting a given names by an initial, or removing an initial, for example, are operations which generate weakenings of a name. Such operations are applied with arbitrary depth, until the name has been reduced to a single initial followed by the lastname, and all intermediary steps returned. 
 
 =head2 samePerson(string name1, string name2): string
 
