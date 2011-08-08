@@ -41,7 +41,7 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 
 our @EXPORT = ();
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 our @NAME_PREFIXES = qw(de di du da le la van von der den des ten ter);
 
@@ -670,7 +670,9 @@ sub getNameAbbreviations {
 }
 
 sub reverseName {
-    my @n = split(/,\s*/,shift());
+    my $n = shift();
+    return undef unless defined($n);
+    my @n = split(/,\s*/,$n);
     return "$n[1] $n[0]";
 }
 
@@ -685,7 +687,8 @@ sub composeName {
 sub normalizeNameWhitespace {
 
     my $in = shift;
-
+    
+    return undef unless defined $in;
     #print "in: $in\n";
     # this used to be optional, but then we never know in advance
     #my $initialsCanBeLowerCase = shift;
@@ -712,6 +715,7 @@ sub normalizeNameWhitespace {
 sub parseName {
  	my $in = shift;
 
+    return undef unless defined $in;
  	#print "-->parseName in: $in\n";
     
     $in =~ s/^\s*and\s+//; 
@@ -777,6 +781,7 @@ sub parseNames {
 
     my $in = shift;
     my $reverse = shift; # means names are stupidly written like this: David, Bourget
+    return undef if !defined $in;
     while($in =~ s/(^|\W)(dr|prof\.? em\.?|prof|profdr|prof|sir|mrs|ms|mr)\.?(\W)/$1 $3/gi) {}
     $in =~ s/^\s+//;
     $in =~ s/([^A-Z]{2,2})\.\s*/$1/; # remove . at the end
@@ -827,9 +832,9 @@ sub parseNames {
                 return parseNameList(split(/$SEMI_AND/i,$in),$reverse);
             } 
 
-            # if there is no comma after, it's not-reversed, comma separated.  
             else {
-                return parseNameList(split(/$COMMA_AND/i,$in),$reverse);
+                my @parts = split(/$COMMA_AND/i,$in);
+                return parseNameList(@parts,$reverse);
             }
 
         } else {
@@ -890,7 +895,23 @@ sub parseNameList {
         $reverse = 1;
 
     }
-    foreach my $a (@_) {
+    # first we correct for overly split names like 'Bourget; D; John Doe'
+    my @new;
+    #print Dumper(\@_); use Data::Dumper;
+    for (@_) {
+        # if the part looks like an initial, we add it to the previous name part
+        next unless $_;
+        if (/^([A-Z](\.|\s|$)\s?)+$/ and $#new > -1) {
+            if ($new[-1] =~ /,/) {
+                $new[-1] = "$new[-1] $_";
+            } else {
+                $new[-1] = "$new[-1], $_";
+            }
+        } else {
+            push @new, $_;
+        }
+    }
+    foreach my $a (@new) {
         next unless $a;
         my ($f,$l) = parseName($a);
         push @auths, ($reverse ? "$f, $l" : "$l, $f");
@@ -934,6 +955,7 @@ sub abbreviationOf {
 # if the two names passed as params are such that they could belong to the same person, returns a merged name
 sub samePerson {
  	my ($a,$b) = @_; #name1,name2
+    return undef if !defined($a) or !defined($b);
 	my $a_expd = 0;
 	my $b_expd = 0;
 	my ($lasta,$firsta) = split(',',cleanName($a,' ','reparse'));
@@ -1032,6 +1054,8 @@ sub cleanName {
 	my ($n, $space, $reparse) = @_;
 
     # Some of the cleaning-up here is redundant because also in parseName, which is called last. But it doesn't hurt.. If it works don't try and fix it.
+
+    return undef unless defined $n;
 
     #print "Cleaning name: $n\n";
 
