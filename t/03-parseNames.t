@@ -29,7 +29,10 @@ my %tests = (
     "D Bourget, Zbigniew Z Lukasiak and John Doe" => "Bourget, D.; Lukasiak, Zbigniew Z.; Doe, John",
     "Bourget, D and John Doe" => "Bourget, D.; Doe, John",
     "Bourget, D, Chalmers C, and John Doe" => "Bourget, D.; Chalmers, C.; Doe, John",
-    cleanName("Guilherme Gusmão da Silva") => "da Silva, Guilherme Gusmão"
+    cleanName("Guilherme Gusmão da Silva") => "da Silva, Guilherme Gusmão",
+    cleanName("van Untouched, Firstname") => "van Untouched, Firstname",
+    cleanName("Van Untouched, Firstname") => "Van Untouched, Firstname",
+    cleanName("VAN TOUCHED, firstname") => "van Touched, Firstname",
 );
 #print cleanName("Guilherme Gusmão da Silva");
 foreach my $t (keys %tests) {

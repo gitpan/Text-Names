@@ -41,7 +41,7 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 
 our @EXPORT = ();
 
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 
 our @NAME_PREFIXES = qw(de di du da le la van von der den des ten ter);
 
@@ -1203,7 +1203,10 @@ sub capitalize {
     my $txt = shift;
     my %args = @_; 
     #print "bef: $txt\n";
-    my $t = capitalize_title($txt, PRESERVE_ANYCAPS=>1);
+    # we don't want to recapitalize when it look ok
+    # what doesn't look ok is a token with all lowercase (4 or more chars) or allcaps (2 or more chars)
+    return $txt unless $txt =~ /\b[A-Z]{2,}\b/ or $txt =~ /\b[a-z]{4,}\b/;
+    my $t = capitalize_title($txt);
     if ($args{notSentence}) {
         $t =~ s/^($PREFIXES)/lc $1/ie;
     }
