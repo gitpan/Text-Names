@@ -21,4 +21,4 @@ requires:
   Test::More: 0.96
   Text::Capitalize: 1.1
   Text::LevenshteinXS: 0.03
-version: 0.20
+version: 0.30
