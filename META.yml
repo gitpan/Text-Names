@@ -1,5 +1,5 @@
 ---
-abstract: 'Perl extension for name parsing and normalization'
+abstract: 'Perl extension for proper name parsing, normalization, recognition, and classification'
 author:
   - 'David Bourget'
 build_requires:
@@ -21,4 +21,4 @@ requires:
   Test::More: 0.96
   Text::Capitalize: 1.1
   Text::LevenshteinXS: 0.03
-version: 0.31
+version: 0.32

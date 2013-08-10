@@ -1,5 +1,5 @@
 {
-   "abstract" : "Perl extension for name parsing and normalization",
+   "abstract" : "Perl extension for proper name parsing, normalization, recognition, and classification",
    "author" : [
       "David Bourget"
    ],
@@ -39,5 +39,5 @@
       }
    },
    "release_status" : "stable",
-   "version" : "0.31"
+   "version" : "0.32"
 }
