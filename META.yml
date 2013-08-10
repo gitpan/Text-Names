@@ -21,4 +21,6 @@ requires:
   Test::More: 0.96
   Text::Capitalize: 1.1
   Text::LevenshteinXS: 0.03
-version: 0.32
+resources:
+  repository: https://github.com/dbourget/Text-Names
+version: 0.33
