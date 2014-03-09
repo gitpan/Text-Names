@@ -23,4 +23,4 @@ requires:
   Text::LevenshteinXS: 0.03
 resources:
   repository: https://github.com/dbourget/Text-Names
-version: 0.33
+version: 0.39
