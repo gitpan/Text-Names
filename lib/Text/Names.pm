@@ -6,6 +6,7 @@ use warnings;
 use Text::Capitalize qw(capitalize_title @exceptions);
 use Text::LevenshteinXS qw(distance);
 use Unicode::Normalize;
+use utf8;
 
 
 require Exporter;
@@ -34,13 +35,15 @@ our %EXPORT_TAGS = ( 'all' => [ qw(
     isCommonSurname
     isCommonFirstname
     guessGender
+    firstnamePrevalence
+    surnamePrevalence
 ) ] );
 
 our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 
 our @EXPORT = ();
 
-our $VERSION = '0.39';
+our $VERSION = '0.41';
 
 
 #
@@ -58,6 +61,8 @@ our @NAME_PREFIXES = qw(de di du da le la van von der den des ten ter);
      quot amp
   );
 push @Text::Capitalize::exceptions, @NAME_PREFIXES;
+
+my $APOST = "(?:’|')";
 
 $Text::Capitalize::word_rule =  qr{ ([^\w\s]*)   # $1 - leading punctuation 
                                #   (e.g. ellipsis, leading apostrophe)
@@ -688,23 +693,28 @@ my $COMMON_SURNAMES;
 my $COMMON_MALE_FIRSTNAMES;
 my $COMMON_FEMALE_FIRSTNAMES;
 
-sub isCommonSurname {
-    my ($name, $percentLimit) = @_;
-    $percentLimit ||= 0;
-    $name = uc $name;
+sub firstnamePrevalence {
+    my $name = uc shift;
     prepareCommonNames() unless $namesInitialized; 
-    return 1 if exists $commonSurnames{$name}  and  $commonSurnames{$name} >= $percentLimit ;
+    return (($commonMaleFirstnames{$name} || 0) + ($commonFemaleFirstnames{$name} || 0))/2;
+}
+sub surnamePrevalence {
+    my $name = uc shift;
+    prepareCommonNames() unless $namesInitialized; 
+    return $commonSurnames{$name} || 0;
 }
 
 sub isCommonFirstname {
     my ($name, $percentLimit) = @_;
     $percentLimit ||= 0;
-    $name = uc $name;
-    prepareCommonNames() unless $namesInitialized; 
-    return 1 if exists $commonMaleFirstnames{$name} and $commonMaleFirstnames{$name} >= $percentLimit or
-                exists $commonFemaleFirstnames{$name} and $commonFemaleFirstnames{$name} >= $percentLimit;
-    return 0;
+    return firstnamePrevalence($name) > $percentLimit;
 }
+sub isCommonSurname {
+    my ($name, $percentLimit) = @_;
+    $percentLimit ||= 0;
+    return surnamePrevalence($name) > $percentLimit;
+}
+
 
 sub guessGender {
     my ($name) = @_;
@@ -772,7 +782,7 @@ sub normalizeNameWhitespace {
     $in =~ s/\.\s*([A-Z])/. $1/g; # adjust spacing between initials
     #print "in: $in\n";
     $in =~ s/([A-Z])\.\s([A-Z])\./$1. $2./g;
-    $in =~ s/\b([A-Z])\b(?![\.'])/$1./g;
+    $in =~ s/\b([A-Z])\b(?![\.'’])/$1./g;
     while ($in =~ s/([\.\s][A-Z])(\s|$)/$1.$2/g) {};
     $in =~ s/\.\s*([A-Z])/. $1/g; # adjust spacing between initials
 
@@ -793,7 +803,7 @@ sub parseName {
     $in =~ s/\.\s*$//; # remove . at the end
  	#print "$in -->";
     $in = normalizeNameWhitespace($in);
-    #print "name cleaned:'$in'\n";
+    #print "$in'\n";
 
     # check if we have a case of Lastname I. without comma
     if ($in !~ /,/ and $in=~ /^(.*?\s)((?:[A-Z][\-\.\s]{0,2}){1,3})$/) {
@@ -1001,6 +1011,7 @@ sub parseNameList {
 sub parseName2 {
     my $in = shift;
     my ($i,$s);
+    return ("","") unless defined $in;
     my ($l,$f) = split(/,\s*/,$in);
     $f ||= '';
     $l ||= '';
@@ -1042,8 +1053,8 @@ sub samePerson {
 	my ($lasta,$firsta) = split(',',cleanName($a,' ','reparse'));
 	my ($lastb,$firstb) = split(',',cleanName($b,' ','reparse'));
 	#print "here '$lasta'-'$lastb'\n";
-    $lasta =~ s/\s+Jr\.?$//;
-    $lastb =~ s/\s+Jr\.?$//;
+    $lasta =~ s/\s+Jr\.?$// if defined $lasta;
+    $lastb =~ s/\s+Jr\.?$// if defined $lastb;
 	return undef unless equivtext($lasta,$lastb);
 =old
 	# regimentation
@@ -1151,6 +1162,10 @@ sub cleanName {
 
     #print "Cleaning name: $n\n";
 
+    $n =~ s/\.( \.)+/./g;
+    $n =~ s/\.($APOST)/'/g;
+
+
     # if ", john doe"
     if ($n =~ s/^\s*,\s+//) { }
 
@@ -1194,11 +1209,18 @@ sub cleanName {
         $n = capitalize($n,notSentence=>1);#_title($n, PRESERVE_ANYCAPS=>1, NOT_CAPITALIZED=>\@PREFIXES);	
     }
 
+    # do we have initials suck on the surname like so: RawlsJ. 
+    unless ($n =~ /,/ or $n =~ /\w \w/) {
+        $n =~ s/([A-Z][a-z]{1,})((?:[A-Z](?:$|\.|\s|)\s*)+)\s*$/$1, $2/g;
+    }
+
     #warn "$n";
     #unless it's all caps, the caps are initials. we unstuck them and add .
     if ($n =~ /[a-z]/ and $n !~ /[A-Z]{2, } [A-Z]{2,}/) {
-        $n =~ s/(\s|^)([A-Z]{1,3})(\s|$)/$1 . toInitials($2) . $3/ge;
+        $n =~ s/(\s|^)([A-Z]{2,3})(\.|\s|$)/$1 . toInitials($2) . $3/ge;
+    } else {
     }
+    #warn $n;
 
     my ($f,$l) = parseName($n);
 
@@ -1212,8 +1234,10 @@ sub cleanName {
 
 sub toInitials {
     my $s = shift;
+    #warn "init: $s";
     return $s if grep { lc $_ eq lc $s } @NAME_PREFIXES;
-    $s =~ s/([A-Z])/$1. /g;
+    $s =~ s/^([A-Z])([A-Z])([A-Z])$/$1. $2. $3./;
+    $s =~ s/^([A-Z])([A-Z])$/$1. $2./;
     return $s;
 
 }
@@ -1316,6 +1340,7 @@ sub rmDiacritics {
     ##  convert to Unicode first
     ##  if your data comes in Latin-1, then uncomment:
     #$_ = Encode::decode( 'iso-8859-1', $_ );  
+    return "" if !defined $_;
     $_ = NFD( $_ );   ##  decompose
     s/\pM//g;         ##  strip combining characters
     s/[^\0-\x80]//g;  ##  clear everything else
@@ -7964,6 +7989,14 @@ Returns true if the name is among the 1000 most popular firstnames (male or fema
 =head2 isCommonSurname(string name, [float threshold]): boolean
 
 Returns true if the name is among the 1000 most popular surnames according to the 1990 US Census. If a threshold percentage is passed, the name must have at least this frequency for the subroutine to return true. See http://www.census.gov/genealogy/www/data/1990surnames/names_files.html.
+
+=head2 firstnamePrevalence(string name): float [0-100]
+
+Returns a float between 0 and 100 indicating how common the firstname is according to the 1990 US Census. Names that are not in the top 1000 return 0.
+
+=head2 surnamePrevalence(string name): float [0-100]
+
+Returns a float between 0 and 100 indicating how common the surname is according to the 1990 US Census. Names that are not in the top 1000 return 0.
 
 =head2 normalizeNameWhitespace(string name): string
 
